@@ -10,6 +10,8 @@ import sys
 import tempfile
 import threading
 import tkinter as tk
+import json
+import urllib.request
 import webbrowser
 from pathlib import Path
 from tkinter import filedialog, messagebox, ttk
@@ -19,6 +21,8 @@ APP_NAME = "Five Transcript"
 APP_VERSION = "1.0.0"
 SUPPORT_CONTACT = "Guilherme Augusto - 17992347622"
 SUPPORT_WHATSAPP_URL = "https://wa.me/5517992347622"
+UPDATE_API_URL = "https://api.github.com/repos/gaugusto26/five_transcript/releases/latest"
+UPDATE_DOWNLOAD_URL = "https://github.com/gaugusto26/five_transcript/releases/latest"
 SUPPORTED_EXTENSIONS = {
     ".mp3", ".wav", ".m4a", ".aac", ".ogg", ".flac", ".wma",
     ".mp4", ".mov", ".mkv", ".avi", ".webm", ".mpeg", ".mpg",
@@ -58,6 +62,7 @@ class FiveTranscriptApp(tk.Tk):
         self.events: queue.Queue[tuple[str, object]] = queue.Queue()
         self._build_ui()
         self.after(100, self._read_events)
+        self.after(700, self.start_update_check)
 
     def _build_ui(self) -> None:
         style = ttk.Style(self)
@@ -199,6 +204,14 @@ class FiveTranscriptApp(tk.Tk):
                 elif event == "error":
                     self._set_busy(False, "Nao foi possivel concluir a transcricao.")
                     messagebox.showerror(APP_NAME, str(value))
+                elif event == "update_available":
+                    latest_version, download_url = value
+                    if messagebox.askyesno(
+                        APP_NAME,
+                        f"Uma nova versao do {APP_NAME} esta disponivel: {latest_version}.\n\n"
+                        "Deseja abrir a pagina para baixar a atualizacao?",
+                    ):
+                        webbrowser.open_new_tab(download_url)
         except queue.Empty:
             pass
         self.after(100, self._read_events)
@@ -224,6 +237,25 @@ class FiveTranscriptApp(tk.Tk):
         opened = webbrowser.open_new_tab(SUPPORT_WHATSAPP_URL)
         if not opened:
             messagebox.showinfo(APP_NAME, f"Entre em contato com: {SUPPORT_CONTACT}")
+
+    def start_update_check(self) -> None:
+        """Check GitHub Releases in background; failures never interrupt local use."""
+        threading.Thread(target=self._update_check_worker, daemon=True).start()
+
+    def _update_check_worker(self) -> None:
+        try:
+            request = urllib.request.Request(UPDATE_API_URL, headers={"Accept": "application/vnd.github+json", "User-Agent": "Five-Transcript"})
+            with urllib.request.urlopen(request, timeout=4) as response:
+                release = json.load(response)
+            latest_version = str(release.get("tag_name", "")).lstrip("v")
+            if latest_version and self._version_tuple(latest_version) > self._version_tuple(APP_VERSION):
+                self.events.put(("update_available", (latest_version, release.get("html_url") or UPDATE_DOWNLOAD_URL)))
+        except Exception:
+            pass
+
+    @staticmethod
+    def _version_tuple(version: str) -> tuple[int, ...]:
+        return tuple(int(part) for part in version.split(".") if part.isdigit())
 
     def save_text(self) -> None:
         text = self.transcript.get("1.0", "end-1c")

@@ -45,3 +45,7 @@ Para gerar novamente sem baixar o modelo, desde que ele já exista:
 ## Contato de suporte
 
 O rodapé atualmente mostra `Suporte: contato a confirmar`, conforme solicitado. Atualize essa frase em `app.py` quando o contato definitivo estiver disponível.
+
+## Atualizações do aplicativo
+
+O aplicativo verifica, em segundo plano, a versão mais recente publicada nas [GitHub Releases](https://github.com/gaugusto26/five_transcript/releases). Para publicar uma atualização, aumente `APP_VERSION` em `app.py`, gere o novo `Five-Transcript-Setup.exe` e publique-o em uma Release com a mesma versão na tag (por exemplo, `v1.0.1`). O aplicativo apenas notifica: o download só é aberto após a confirmação da pessoa usuária.
