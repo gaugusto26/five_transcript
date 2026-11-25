@@ -18,7 +18,7 @@ from tkinter import filedialog, messagebox, ttk
 
 
 APP_NAME = "Five Transcript"
-APP_VERSION = "1.0.0"
+APP_VERSION = "1.0.1"
 SUPPORT_CONTACT = "Guilherme Augusto - 17992347622"
 SUPPORT_WHATSAPP_URL = "https://wa.me/5517992347622"
 UPDATE_API_URL = "https://api.github.com/repos/gaugusto26/five_transcript/releases/latest"
