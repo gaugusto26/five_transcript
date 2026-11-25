@@ -1,5 +1,6 @@
 # PyInstaller specification for the Windows distribution folder.
 from pathlib import Path
+import faster_whisper
 
 root = Path(SPECPATH)
 datas = [
@@ -10,6 +11,9 @@ logo = root / "assets" / "logo.png"
 if logo.is_file():
     datas.append((str(logo), "assets"))
 icon = root / "assets" / "icon.ico"
+faster_whisper_assets = Path(faster_whisper.__file__).resolve().parent / "assets"
+if faster_whisper_assets.is_dir():
+    datas.append((str(faster_whisper_assets), "faster_whisper/assets"))
 
 a = Analysis([str(root / "app.py")], pathex=[str(root)], binaries=[], datas=datas, hiddenimports=["ctranslate2", "faster_whisper", "requests"], hookspath=[], excludes=[], noarchive=False)
 pyz = PYZ(a.pure)
