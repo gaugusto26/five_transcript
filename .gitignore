@@ -1,0 +1,7 @@
+build/
+dist/
+output/
+__pycache__/
+*.spec.bak
+assets/ffmpeg/bin/ffmpeg.exe
+models/faster-whisper-small/
