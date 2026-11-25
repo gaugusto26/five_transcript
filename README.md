@@ -48,4 +48,15 @@ O rodapé atualmente mostra `Suporte: contato a confirmar`, conforme solicitado.
 
 ## Atualizações do aplicativo
 
-O aplicativo verifica, em segundo plano, a versão mais recente publicada nas [GitHub Releases](https://github.com/gaugusto26/five_transcript/releases). Para publicar uma atualização, aumente `APP_VERSION` em `app.py`, gere o novo `Five-Transcript-Setup.exe` e publique-o em uma Release com a mesma versão na tag (por exemplo, `v1.0.1`). O aplicativo apenas notifica: o download só é aberto após a confirmação da pessoa usuária.
+O aplicativo verifica, em segundo plano, a versão mais recente publicada nas [GitHub Releases](https://github.com/gaugusto26/five_transcript/releases). Quando encontra uma versão maior, ele avisa a pessoa usuária e oferece abrir a página de download. Sem internet, o aplicativo abre e funciona normalmente.
+
+> Importante: o instalador `1.0.0` gerado antes da inclusão desse recurso não possui a verificação de atualizações. Para distribuir a primeira versão com esse mecanismo, aumente a versão para `1.0.1`, gere um novo instalador e publique uma Release `v1.0.1`.
+
+### Publicar uma atualização
+
+1. Em `app.py`, aumente `APP_VERSION` (por exemplo, de `1.0.1` para `1.0.2`).
+2. Em `installer/FiveTranscript.iss`, atualize `MyAppVersion` para a mesma versão.
+3. Gere novamente o instalador com `./build.ps1 -SkipModelDownload`.
+4. No GitHub, crie uma Release com a tag `v<versão>` e anexe `output/Five-Transcript-Setup.exe`.
+
+O aplicativo compara a versão instalada com a tag da Release. Ele apenas notifica: o download só é aberto após confirmação da pessoa usuária.
