@@ -4,7 +4,7 @@ import faster_whisper
 
 root = Path(SPECPATH)
 datas = [
-    (str(root / "models" / "faster-whisper-small"), "models/faster-whisper-small"),
+    (str(root / "models" / "faster-whisper-medium"), "models/faster-whisper-medium"),
     (str(root / "assets" / "ffmpeg" / "bin" / "ffmpeg.exe"), "assets/ffmpeg/bin"),
 ]
 logo = root / "assets" / "logo.png"

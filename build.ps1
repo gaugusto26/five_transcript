@@ -24,12 +24,12 @@ if (-not (Test-Path 'assets/ffmpeg/bin/ffmpeg.exe')) {
 & py -3.11 -m pip install --upgrade pip
 & py -3.11 -m pip install -r requirements.txt pyinstaller huggingface_hub
 
-if (-not $SkipModelDownload -and -not (Test-Path 'models/faster-whisper-small/model.bin')) {
-    & py -3.11 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='Systran/faster-whisper-small', local_dir='models/faster-whisper-small')"
+if (-not $SkipModelDownload -and -not (Test-Path 'models/faster-whisper-medium/model.bin')) {
+    & py -3.11 -c "from huggingface_hub import snapshot_download; snapshot_download(repo_id='Systran/faster-whisper-medium', local_dir='models/faster-whisper-medium')"
 }
 
-if (-not (Test-Path 'models/faster-whisper-small/model.bin')) {
-    throw 'Modelo ausente. Execute sem -SkipModelDownload ou coloque o modelo em models/faster-whisper-small.'
+if (-not (Test-Path 'models/faster-whisper-medium/model.bin')) {
+    throw 'Modelo ausente. Execute sem -SkipModelDownload ou coloque o modelo em models/faster-whisper-medium.'
 }
 
 & py -3.11 -m PyInstaller --noconfirm --clean five_transcript.spec

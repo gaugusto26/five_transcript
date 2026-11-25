@@ -1,5 +1,5 @@
 #define MyAppName "Five Transcript"
-#define MyAppVersion "1.0.2"
+#define MyAppVersion "1.1.0"
 #define MyAppPublisher "Guilherme Augusto"
 #define MyAppExeName "Five Transcript.exe"
 

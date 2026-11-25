@@ -5,3 +5,4 @@ __pycache__/
 *.spec.bak
 assets/ffmpeg/bin/ffmpeg.exe
 models/faster-whisper-small/
+models/faster-whisper-medium/

@@ -9,7 +9,7 @@ Aplicativo Windows instalável para transcrever áudio e vídeo localmente, usan
 - [Inno Setup 6](https://jrsoftware.org/isdl.php)
 - `ffmpeg.exe` 64 bits em `assets/ffmpeg/bin/ffmpeg.exe`
 
-O modelo `small` do faster-whisper é baixado pelo script na primeira geração e passa a integrar o instalador, permitindo uso offline depois da instalação. Reserve alguns GB de espaço durante o build; o pacote final também será grande por conter o modelo e dependências.
+O modelo multilíngue `medium` do faster-whisper é baixado pelo script na primeira geração e passa a integrar o instalador, permitindo uso offline depois da instalação. Ele oferece qualidade superior para entrevistas em português, em troca de um instalador maior e maior tempo de transcrição. Reserve alguns GB de espaço durante o build.
 
 ## Gerar o Setup.exe
 
@@ -50,7 +50,7 @@ O rodapé atualmente mostra `Suporte: contato a confirmar`, conforme solicitado.
 
 O aplicativo verifica, em segundo plano, a versão mais recente publicada nas [GitHub Releases](https://github.com/gaugusto26/five_transcript/releases). Quando encontra uma versão maior, ele avisa a pessoa usuária e oferece abrir a página de download. Sem internet, o aplicativo abre e funciona normalmente.
 
-> Importante: o instalador `1.0.0` gerado antes da inclusão desse recurso não possui a verificação de atualizações. Para distribuir a primeira versão com esse mecanismo, aumente a versão para `1.0.1`, gere um novo instalador e publique uma Release `v1.0.1`.
+> Importante: o instalador `1.0.0` gerado antes da inclusão desse recurso não possui a verificação de atualizações. A versão `1.1.0` já inclui esse mecanismo, a barra de progresso e o modelo de transcrição `medium`.
 
 ### Publicar uma atualização
 

@@ -18,7 +18,7 @@ from tkinter import filedialog, messagebox, ttk
 
 
 APP_NAME = "Five Transcript"
-APP_VERSION = "1.0.2"
+APP_VERSION = "1.1.0"
 SUPPORT_CONTACT = "Guilherme Augusto - 17992347622"
 SUPPORT_WHATSAPP_URL = "https://wa.me/5517992347622"
 UPDATE_API_URL = "https://api.github.com/repos/gaugusto26/five_transcript/releases/latest"
@@ -27,6 +27,7 @@ SUPPORTED_EXTENSIONS = {
     ".mp3", ".wav", ".m4a", ".aac", ".ogg", ".flac", ".wma",
     ".mp4", ".mov", ".mkv", ".avi", ".webm", ".mpeg", ".mpg",
 }
+MODEL_DIRECTORY = "faster-whisper-medium"
 
 
 def resource_path(relative_path: str) -> Path:
@@ -44,7 +45,7 @@ def find_ffmpeg() -> str | None:
 
 def find_local_model() -> Path | None:
     """Return the bundled Whisper model only when it is complete."""
-    model_dir = resource_path("models/faster-whisper-small")
+    model_dir = resource_path(f"models/{MODEL_DIRECTORY}")
     required_files = ("model.bin", "config.json", "tokenizer.json")
     if model_dir.is_dir() and all((model_dir / name).is_file() for name in required_files):
         return model_dir
@@ -60,6 +61,7 @@ class FiveTranscriptApp(tk.Tk):
         self.configure(bg="#f6f7fb")
         self.selected_file: Path | None = None
         self.events: queue.Queue[tuple[str, object]] = queue.Queue()
+        self.total_duration_seconds: float | None = None
         self._build_ui()
         self.after(100, self._read_events)
         self.after(700, self.start_update_check)
@@ -104,7 +106,7 @@ class FiveTranscriptApp(tk.Tk):
         self.transcribe_button = ttk.Button(buttons, text="Transcrever arquivo", command=self.start_transcription, style="Accent.TButton", state="disabled")
         self.transcribe_button.pack(side="right")
 
-        self.progress = ttk.Progressbar(card, mode="indeterminate")
+        self.progress = ttk.Progressbar(card, mode="determinate", maximum=100, value=0)
         self.progress.pack(fill="x", pady=(16, 8))
         self.status = ttk.Label(card, text="Pronto para receber um arquivo.", style="Subtitle.TLabel")
         self.status.pack(anchor="w", pady=(0, 12))
@@ -158,6 +160,7 @@ class FiveTranscriptApp(tk.Tk):
             from faster_whisper import WhisperModel
 
             audio_path = source
+            self.total_duration_seconds = self._get_duration_seconds(source)
             if source.suffix.lower() not in {".wav", ".mp3", ".m4a", ".flac", ".ogg"}:
                 ffmpeg = find_ffmpeg()
                 if not ffmpeg:
@@ -179,8 +182,23 @@ class FiveTranscriptApp(tk.Tk):
                 )
             self.events.put(("status", "Transcrevendo localmente. Isso pode levar alguns minutos..."))
             model = WhisperModel(str(model_dir), device="cpu", compute_type="int8")
-            segments, _ = model.transcribe(str(audio_path), language="pt", vad_filter=True, beam_size=5)
-            transcript = " ".join(segment.text.strip() for segment in segments).strip()
+            segments, _ = model.transcribe(
+                str(audio_path),
+                language="pt",
+                vad_filter=True,
+                beam_size=5,
+                best_of=5,
+                temperature=0,
+                condition_on_previous_text=True,
+                initial_prompt="Transcricao em portugues do Brasil. Preserve nomes, numeros e pontuacao.",
+            )
+            parts: list[str] = []
+            for segment in segments:
+                parts.append(segment.text.strip())
+                if self.total_duration_seconds:
+                    progress = min(99, max(1, int(segment.end / self.total_duration_seconds * 100)))
+                    self.events.put(("progress", progress))
+            transcript = " ".join(parts).strip()
             if not transcript:
                 raise RuntimeError("Nenhuma fala foi identificada no arquivo.")
             self.events.put(("done", transcript))
@@ -196,8 +214,12 @@ class FiveTranscriptApp(tk.Tk):
                 event, value = self.events.get_nowait()
                 if event == "status":
                     self.status.configure(text=str(value))
+                elif event == "progress":
+                    self.progress.configure(value=int(value))
+                    self.status.configure(text=f"Transcrevendo localmente: {int(value)}%")
                 elif event == "done":
                     self.transcript.insert("1.0", str(value))
+                    self.progress.configure(value=100)
                     self._set_busy(False, "Transcricao concluida.")
                     self.copy_button.configure(state="normal")
                     self.save_button.configure(state="normal")
@@ -222,9 +244,21 @@ class FiveTranscriptApp(tk.Tk):
         self.select_button.configure(state=state)
         self.transcribe_button.configure(state=state if self.selected_file else "disabled")
         if busy:
-            self.progress.start(10)
+            self.progress.configure(value=0)
         else:
-            self.progress.stop()
+            self.progress.configure(value=0 if not self.transcript.get("1.0", "end-1c") else self.progress["value"])
+
+    @staticmethod
+    def _get_duration_seconds(source: Path) -> float | None:
+        """Read media duration locally for an accurate transcription progress bar."""
+        try:
+            import av
+            with av.open(str(source)) as media:
+                if media.duration:
+                    return float(media.duration / av.time_base)
+        except Exception:
+            return None
+        return None
 
     def copy_text(self) -> None:
         text = self.transcript.get("1.0", "end-1c")
